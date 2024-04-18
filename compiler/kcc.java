@@ -14,8 +14,7 @@ import java.io.FileOutputStream;
 //ANTLR packages
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
-import org.objectweb.asm.Opcodes;
-import org.antlr.v4.gui.Trees;
+//import org.antlr.v4.gui.Trees;
 
 import lexparse.*;
 public class kcc{
@@ -39,11 +38,12 @@ public class kcc{
             
             SymbolTable vars = new SymbolTable();
             //parse true output file name and generation file name
-            String genName = "Gen" + args[1].substring(args[1].indexOf(".")-1, args[1].indexOf("."));
-            String outputName = args[1].substring(args[1].indexOf("/")+1, args[1].indexOf("."));
+            String genName = "Gen" + args[1].substring(args[1].length()-1);
+            String outputName = args[1].substring(args[1].indexOf("/")+1);
             File output = new File("output/" + genName + ".java");
             String boilerplate = "";
             String code = "";
+            //Trees.inspect(tree, parser);  //displays the parse tree
             //Try/catch for the FileOutputStream
             try {
                 FileOutputStream outStream = new FileOutputStream(output);
@@ -74,7 +74,10 @@ public class kcc{
                 outStream.write(boilerplate.getBytes());
                 outStream.close();
             } catch(FileNotFoundException e) {System.out.println(e.getMessage());}
-            //Trees.inspect(tree, parser);  //displays the parse tree
+            System.out.println("Generating File...");
+            Runtime.getRuntime().exec("javac output/" + genName + ".java");
+            Runtime.getRuntime().exec("java output/" + genName);
+            System.out.println("Done!");
             //vars.print();
             //System.out.println(tree.toStringTree(parser));
         }

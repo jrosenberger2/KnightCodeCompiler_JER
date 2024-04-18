@@ -1,14 +1,14 @@
 /**
  * MyVisitor is the method visitor used by kcc.java to walk the parse tree, it returns a string of java asm code
  * @author Jared Rosenberger
- * @version 2.0
+ * @version 2.3
  * Assignment 5
  * CS322 - Compiler Construction
  * Spring 2024
  */
 package compiler;
 import org.antlr.v4.runtime.tree.ParseTree;
-
+//import org.objectweb.asm.Opcodes;
 import lexparse.KnightCodeBaseVisitor;
 import lexparse.KnightCodeParser;
 import lexparse.KnightCodeParser.*;
@@ -63,8 +63,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
      */
     @Override
     public String visitDeclare(KnightCodeParser.DeclareContext ctx) {
-        System.out.println("visiting Declare");
-        System.out.println("Declare has " + ctx.getChildCount() + " kids");
+        System.out.println("visiting DECLARE");
+        //System.out.println("Declare has " + ctx.getChildCount() + " kids");
         if(ctx.getChildCount() >=2) {
             for(int i = 1; i<ctx.getChildCount(); i++) {
                 ParseTree tempNode = ctx.getChild(i);
@@ -93,62 +93,13 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     @Override 
     public String visitBody(KnightCodeParser.BodyContext ctx) { 
         System.out.println("visiting Body");
+        //System.out.println(ctx.toStringTree());
         String code = "";
         //Loop visits every stat child of the body
         for(int i = 1; i<ctx.getChildCount()-1; i++) {
-            ParseTree tempNode = ctx.getChild(i);//the stat type
-            //System.out.println("tempNode is " + tempNode);
-            ParseTree childNode = tempNode.getChild(0);//first child of stat can determine which type we're dealing with
-            String childContent = childNode.getText();
-            //System.out.println("childNode is " + childNode.hashCode());
-            
-            //Checks for setVar keyword
-            if(childContent.substring(0, 3).equals("SET")) {
-                System.out.println("Found setvar");
-                code += visitSetvar((SetvarContext) childNode);
-            }
-            //Checks for MULT symbol
-            else if(childContent.indexOf('*') != -1) {
-                System.out.println("Found MULT");
-                code += visitMultiplication((MultiplicationContext) childNode);
-            }
-            //Checks for DIV symbol
-            else if(childContent.indexOf('/') != -1) {
-                System.out.println("Found DIV");
-                code += visitDivision((DivisionContext) childNode);
-            }
-            //Checks for ADD symbol
-            else if(childContent.indexOf('+') != -1) {
-                System.out.println("Found ADD");
-                code += visitAddition((AdditionContext) childNode);
-            }
-            //Checks for SUB symbol
-            else if(childContent.indexOf('-') != -1) {
-                System.out.println("Found SUB");
-                code += visitSubtraction((SubtractionContext) childNode);
-            }
-            //Checks for COMP symbol
-            else if(childContent.indexOf('>') != -1 || childContent.indexOf('<') != -1 || childContent.indexOf('=') != -1 || childContent.indexOf("<>") != -1) {
-                System.out.println("Found COMP");
-            }
-            //Checks for PRINT keyword
-            else if(childContent.substring(0,5).equals("PRINT")) {
-                System.out.println("Found PRINT");
-                code += visitPrint((PrintContext) childNode);
-            }
-            //Checks for READ keyword
-            else if(childContent.substring(0,4).equals("READ")) {
-                System.out.println("Found READ");
-                code += visitRead((ReadContext) childNode);
-            }
-            //Checks for IF keyword
-            else if(childContent.substring(0,2).equals("IF")) {
-                System.out.println("Found IF");
-            }
-            //Checks for WHILE keyword
-            else if(childContent.substring(0,5).equals("WHILE")) {
-                System.out.println("Found WHILE");
-            }
+            ParseTree tempNode = ctx.getChild(i);//the stat child
+            //System.out.println(tempNode.toStringTree());
+            code += visitStat((StatContext) tempNode);
         }
         System.out.println("Done!");
         return code; 
@@ -156,11 +107,75 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
 
     /**
      * {@inheritDoc}
+     * visitStat is used to visit all statements and return apropriate asm code
+     */
+    @Override 
+    public String visitStat(KnightCodeParser.StatContext ctx) { 
+        System.out.println("Visiting STAT");
+        String code = "";
+        ParseTree childNode = ctx.getChild(0);
+        String childContent = childNode.getText();
+        //System.out.println("childNode is " + childNode.hashCode());
+        //Checks for setVar keyword
+        if(childContent.substring(0, 3).equals("SET")) {
+            System.out.println("Found SET");
+            code += visitSetvar((SetvarContext) childNode);
+        }
+        //Checks for PRINT keyword
+        else if(childContent.substring(0,5).equals("PRINT")) {
+            System.out.println("Found PRINT");
+            code += visitPrint((PrintContext) childNode);
+        }
+        //Checks for READ keyword
+        else if(childContent.substring(0,4).equals("READ")) {
+            System.out.println("Found READ");
+            code += visitRead((ReadContext) childNode);
+        }
+        //Checks for IF keyword
+        else if(childContent.substring(0,2).equals("IF")) {
+            System.out.println("Found IF");
+            code += visitDecision((DecisionContext) childNode);
+        }
+         //Checks for WHILE keyword
+         else if(childContent.substring(0,5).equals("WHILE")) {
+            System.out.println("Found WHILE");
+            code += visitLoop((LoopContext) childNode);
+        }
+        //Checks for MULT symbol
+        else if(childContent.indexOf('*') != -1) {
+            System.out.println("Found MULT");
+            code += visitMultiplication((MultiplicationContext) childNode);
+        }
+        //Checks for DIV symbol
+        else if(childContent.indexOf('/') != -1) {
+            System.out.println("Found DIV");
+            code += visitDivision((DivisionContext) childNode);
+        }
+        //Checks for ADD symbol
+        else if(childContent.indexOf('+') != -1) {
+            System.out.println("Found ADD");
+            code += visitAddition((AdditionContext) childNode);
+        }
+        //Checks for SUB symbol
+        else if(childContent.indexOf('-') != -1) {
+            System.out.println("Found SUB");
+            code += visitSubtraction((SubtractionContext) childNode);
+        }
+        //Checks for COMP symbol
+        else if(childContent.indexOf('>') != -1 || childContent.indexOf('<') != -1 || childContent.indexOf('=') != -1 || childContent.indexOf("<>") != -1) {
+            System.out.println("Found COMP");
+            code += visitComp((CompContext) childNode);
+        }
+        return code;
+    }//end visitStat
+
+    /**
+     * {@inheritDoc}
      * visitSetvar is used to set the values of any variable in the symbol table and/or its asm index in the index table
      */
     @Override 
     public String visitSetvar(KnightCodeParser.SetvarContext ctx) { 
-        System.out.println("visiting setvar");
+        System.out.println("Visiting SET");
         String code = "";
         String id = ctx.getChild(1).getText();
         //System.out.println("ID Token: " + id);
@@ -181,26 +196,42 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
         else if(exprTxt.indexOf('*') != -1) {
             System.out.println("Found MULT");
             code += visitMultiplication((MultiplicationContext)ctx.getChild(3));
-            index.addEntry(id, new Variable(storageIndex-1));
-            symbols.remove(id);
+            if(symbols.getValue(id) != null) {
+                index.addEntry(id, new Variable(storageIndex-1));
+                symbols.remove(id);
+            }
+            else 
+                index.getValue(id).setInt(storageIndex-1);
         }
         else if(exprTxt.indexOf('/') != -1) {
             System.out.println("Found DIV");
             code += visitDivision((DivisionContext) ctx.getChild(3));
-            index.addEntry(id, new Variable(storageIndex-1));
-            symbols.remove(id);
+            if(symbols.getValue(id) != null) {
+                index.addEntry(id, new Variable(storageIndex-1));
+                symbols.remove(id);
+            }
+            else 
+                index.getValue(id).setInt(storageIndex-1);
         }
         else if(exprTxt.indexOf('+') != -1) {
             System.out.println("Found ADD");
             code += visitAddition((AdditionContext) ctx.getChild(3));
-            index.addEntry(id, new Variable(storageIndex-1));
-            symbols.remove(id);
+            if(symbols.getValue(id) != null) {
+                index.addEntry(id, new Variable(storageIndex-1));
+                symbols.remove(id);
+            }
+            else 
+                index.getValue(id).setInt(storageIndex-1);
         }
         else if(exprTxt.indexOf('-') != -1) {
             System.out.println("Found SUB");
             code += visitSubtraction((SubtractionContext) ctx.getChild(3));
-            index.addEntry(id, new Variable(storageIndex-1));
-            symbols.remove(id);
+            if(symbols.getValue(id) != null) {
+                index.addEntry(id, new Variable(storageIndex-1));
+                symbols.remove(id);
+            }
+            else 
+                index.getValue(id).setInt(storageIndex-1);
         }
         return code; 
     }//end visitSetvar
@@ -221,7 +252,7 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
         if(index.getValue(content) != null) {
             //System.out.println(symbols.getValue(ctx.ID().getText()).getInt());
             //System.out.println("In if statement");
-            Variable temp = index.remove(content);
+            Variable temp = index.getValue(content);
             //Checks if the saved variable is a string or not
             if(temp.isString()) {
                 code += "mv.visitFieldInsn(Opcodes.GETSTATIC, \"java/lang/System\", \"out\", \"Ljava/io/PrintStream;\");\n";
@@ -300,6 +331,124 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
 
     /**
      * {@inheritDoc}
+     * visitDecision returns suitable asm code for an if, then, else block  
+     */
+    @Override 
+    public String visitDecision(KnightCodeParser.DecisionContext ctx) { 
+        System.out.println("Visiting IF");
+        System.out.println(ctx.getText());
+        String code = "";
+        int a=0;
+        int b=0;
+        int aIndex=0;
+        int bIndex=0;
+        String termA = ctx.getChild(1).getText();
+        String termB = ctx.getChild(3).getText();
+        //System.out.println(termA);
+        //System.out.println(termB);
+        //Checks if a is a variable
+        if(index.getValue(termA) != null) {
+            aIndex = index.getValue(termA).getInt();
+            code += "mv.visitVarInsn(Opcodes.ILOAD,"+aIndex+");\n";
+        }
+        else {
+            try {
+                a = Integer.parseInt(termA);
+                code += "mv.visitIntInsn(Opcodes.BIPUSH,"+a+");\n";
+            } catch(NumberFormatException e) {}
+        }
+        //Checks if b is a variable
+        if(index.getValue(termB) != null) {
+            bIndex = index.getValue(termB).getInt();
+            code += "mv.visitVarInsn(Opcodes.ILOAD,"+bIndex+");\n";
+        }
+        //Parses ints a&b from the tree
+        else {
+            try {
+                b = Integer.parseInt(termB);
+                code += "mv.visitIntInsn(Opcodes.BIPUSH,"+b+");\n";
+            } catch(NumberFormatException e) {}
+        }
+        //String comp = ctx.getChild(2).getText();
+
+        /* 
+        else {
+            //STAT Loop for no ELSE Block
+            code += "Label endIf = new Label();\n";
+            if(comp.equals(">")) {
+                code += "mv.visitJumpInsn(Opcodes.IF_ICMPLE, endIf);\n";
+            }
+            else if(comp.equals("<")) {
+                code += "mv.visitJumpInsn(Opcodes.IF_ICMPGE, endIf);\n";
+            }
+            else if(comp.equals("=")) {
+                code += "mv.visitJumpInsn(Opcodes.IF_ICMPNE, endIf);\n";
+            }
+            else {
+                code += "mv.visitJumpInsn(Opcodes.IF_ICMPEQ, endIf);\n";
+            }
+            while(i<ctx.getChildCount()) {
+                System.out.println(ctx.getChild(i).getText());
+                code += visitStat((StatContext)ctx.getChild(i));
+                i++;
+            }
+            code += "mv.visitLabel(endIf);\n";
+        }
+        */
+        return code += visitComp((CompContext) ctx.getChild(2)); 
+    }//end visitDecision
+
+    /**
+     * {@inheritDoc}
+     * visitLoop returns suitable asm code for a while loop
+     */
+    @Override 
+    public String visitLoop(KnightCodeParser.LoopContext ctx) { 
+        System.out.println("Visiting WHILE");
+        String code = "";
+        
+        int a=-1;
+        int b=-1;
+        int aIndex=0;
+        int bIndex=0;
+        String termA = ctx.getChild(1).getText();
+        String termB = ctx.getChild(3).getText();
+        //System.out.println(termA);
+        //System.out.println(termB);
+        code += "Label loop = new Label();\nLabel endLoop = new Label();\n";
+        code += "mv.visitLabel(loop);\n";
+        //Checks if a is a variable
+        if(index.getValue(termA) != null) {
+            aIndex = index.getValue(termA).getInt();
+            code += "mv.visitVarInsn(Opcodes.ILOAD,"+aIndex+");\n";
+        }
+        else {
+            try {
+                a = Integer.parseInt(termA);
+                code += "mv.visitIntInsn(Opcodes.BIPUSH,"+a+");\n";
+            } catch(NumberFormatException e) {}
+        }
+        //Checks if b is a variable
+        if(index.getValue(termB) != null) {
+            bIndex = index.getValue(termB).getInt();
+            code += "mv.visitVarInsn(Opcodes.ILOAD,"+bIndex+");\n";
+        }
+        //Parses ints a&b from the tree
+        else {
+            try {
+                b = Integer.parseInt(termB);
+                if(b!=0)
+                    code += "mv.visitIntInsn(Opcodes.BIPUSH,"+b+");\n";
+            } catch(NumberFormatException e) {}
+        }
+        //String comp = ctx.getChild(2).getText();
+        //System.out.println(code.substring(code.length()-11,code.length()-3));
+        code += visitComp((CompContext)ctx.getChild(2));
+        return code; //+= "mv.visitLabel(endLoop);\n";
+    }//visitLoop
+
+    /**
+     * {@inheritDoc}
      * visitMultiplication visits an mult expr, returns bytecode for the operation, and saves the product in the index table
      */
     @Override 
@@ -321,8 +470,13 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
         }
         //Parses ints a&b from the tree
         else {
-            a = Integer.parseInt(termA);
-            b = Integer.parseInt(termB);
+            try {
+                a = Integer.parseInt(termA);
+            } catch(NumberFormatException e) {}
+            try {
+                b = Integer.parseInt(termB);
+        
+            } catch(NumberFormatException e) {}
         }
         code += "mv.visitIntInsn(Opcodes.BIPUSH,"+a+");\n";
         code += "mv.visitVarInsn(Opcodes.ISTORE,"+storageIndex+");\n";
@@ -362,8 +516,13 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
         }
         //Parses ints a&b from the tree
         else {
-            a = Integer.parseInt(termA);
-            b = Integer.parseInt(termB);
+            try {
+                a = Integer.parseInt(termA);
+            } catch(NumberFormatException e) {}
+            try {
+                b = Integer.parseInt(termB);
+        
+            } catch(NumberFormatException e) {}
         }
         code += "mv.visitIntInsn(Opcodes.BIPUSH,"+a+");\n";
         code += "mv.visitVarInsn(Opcodes.ISTORE,"+storageIndex+");\n";
@@ -404,8 +563,13 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
         }
         //Parses ints a&b from the tree
         else {
-            a = Integer.parseInt(termA);
-            b = Integer.parseInt(termB);
+            try {
+                a = Integer.parseInt(termA);
+            } catch(NumberFormatException e) {}
+            try {
+                b = Integer.parseInt(termB);
+        
+            } catch(NumberFormatException e) {}
         }
         code += "mv.visitIntInsn(Opcodes.BIPUSH,"+a+");\n";
         code += "mv.visitVarInsn(Opcodes.ISTORE,"+storageIndex+");\n";
@@ -431,33 +595,65 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     public String visitSubtraction(KnightCodeParser.SubtractionContext ctx) { 
         System.out.println("Visiting SUB");
         String code = "";
-        int a=0;
-        int b=0;
+        int a=-1;
+        int b=-1;
+        int aIndex=0;
+        int bIndex=0;
         String termA = ctx.getChild(0).getText();
         String termB = ctx.getChild(2).getText();
         //Checks if a is a variable
         if(symbols.getValue(termA) != null) {
             a = symbols.remove(termA).getInt();
+            code += "mv.visitIntInsn(Opcodes.BIPUSH,"+a+");\n";
+            code += "mv.visitVarInsn(Opcodes.ISTORE,"+storageIndex+");\n";
+            index.addEntry(termA, new Variable(storageIndex));
+            storageIndex++;
+            code += "mv.visitVarInsn(Opcodes.ILOAD,"+(storageIndex-1)+");\n";
+        }
+        else if(index.getValue(termA) != null) {
+            aIndex = index.getValue(termA).getInt();
+            if(termB.equals("1")) {
+                code += "mv.visitIincInsn("+aIndex+", -1);\n";
+                return code;
+            }
+            else
+                code += "mv.visitVarInsn(Opcodes.ILOAD,"+aIndex+");\n";
+        }
+        else {
+            try {
+                a = Integer.parseInt(termA);
+                code += "mv.visitIntInsn(Opcodes.BIPUSH,"+a+");\n";
+                code += "mv.visitVarInsn(Opcodes.ISTORE,"+storageIndex+");\n";
+                //index.addEntry(termA, new Variable(storageIndex));
+                storageIndex++;
+                code += "mv.visitVarInsn(Opcodes.ILOAD,"+(storageIndex-1)+");\n";
+            } catch(NumberFormatException e) {}
         }
         //Checks if b is a variable
         if(symbols.getValue(termB) != null) {
             b = symbols.remove(termB).getInt();
+            code += "mv.visitIntInsn(Opcodes.BIPUSH,"+b+");\n";
+            code += "mv.visitVarInsn(Opcodes.ISTORE,"+storageIndex+");\n";
+            index.addEntry(termB, new Variable(storageIndex));
+            storageIndex++;
+            code += "mv.visitVarInsn(Opcodes.ILOAD,"+(storageIndex-1)+");\n";
         }
-        //Parses ints a&b from the tree
+        else if(index.getValue(termB) != null) {
+            bIndex = index.getValue(termB).getInt();
+            code += "mv.visitVarInsn(Opcodes.ILOAD,"+bIndex+");\n";
+        }
+        //Parses ints b from the tree
         else {
-            a = Integer.parseInt(termA);
-            b = Integer.parseInt(termB);
+            try {
+                b = Integer.parseInt(termB);
+                    code += "mv.visitIntInsn(Opcodes.BIPUSH,"+b+");\n";
+                    code += "mv.visitVarInsn(Opcodes.ISTORE,"+storageIndex+");\n";
+                //index.addEntry(termB, new Variable(storageIndex));
+                    storageIndex++;
+                    code += "mv.visitVarInsn(Opcodes.ILOAD,"+(storageIndex-1)+");\n";
+            } catch(NumberFormatException e) {}
         }
-        code += "mv.visitIntInsn(Opcodes.BIPUSH,"+a+");\n";
-        code += "mv.visitVarInsn(Opcodes.ISTORE,"+storageIndex+");\n";
-        index.addEntry(termA, new Variable(storageIndex));
-        storageIndex++;
-        code += "mv.visitIntInsn(Opcodes.BIPUSH,"+b+");\n";
-        code += "mv.visitVarInsn(Opcodes.ISTORE,"+storageIndex+");\n";
-        index.addEntry(termB, new Variable(storageIndex));
-        storageIndex++;
-        code += "mv.visitVarInsn(Opcodes.ILOAD,"+(storageIndex-2)+");\n";
-        code += "mv.visitVarInsn(Opcodes.ILOAD,"+(storageIndex-1)+");\n";
+        //code += "mv.visitVarInsn(Opcodes.ILOAD,"+(storageIndex-1)+");\n";
         code += "mv.visitInsn(Opcodes.ISUB);\n";
         code += "mv.visitVarInsn(Opcodes.ISTORE,"+storageIndex+");\n";
         storageIndex++;
@@ -465,12 +661,104 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     }//end visitSubtraction
 
     @Override 
-    public String visitComparison(KnightCodeParser.ComparisonContext ctx) { 
+    public String visitComp(KnightCodeParser.CompContext ctx) { 
         System.out.println("Visiting COMP");
-        //String code = "";
-        
-        return ctx.getText();
-    }
+        //System.out.println(ctx.toStringTree());
+        String code = "";
+        String comp = ctx.getText();
+        String label = "";
+        if(ctx.getParent().getChild(0).getText().equals("IF")) {
+            label = "endIf";
+        }
+        else
+            label = "endLoop";
+        String childName = ctx.getParent().getChild(5).getText();
+        if(ctx.getParent().getText().contains("ELSE")) {
+            code += "Label elseblock = new Label();\nLabel endIf = new Label();\n";
+            if(ctx.getParent().getChild(1).getText().equals("0") || ctx.getParent().getChild(3).getText().equals("0") ){
+                if(comp.equals(">")) {
+                    code += "mv.visitJumpInsn(Opcodes.IFLE, elseblock);\n";
+                }
+                else if(comp.equals("<")) {
+                    code += "mv.visitJumpInsn(Opcodes.IFGE, elseblock);\n";
+                }
+                else if(comp.equals("=")) {
+                    code += "mv.visitJumpInsn(Opcodes.IFNE, elseblock);\n";
+                }
+                else {
+                    code += "mv.visitJumpInsn(Opcodes.IFEQ, elseblock);\n";
+                }
+            }
+            else {
+                if(comp.equals(">")) {
+                    code += "mv.visitJumpInsn(Opcodes.IF_ICMPLE, elseblock);\n";
+                }
+                else if(comp.equals("<")) {
+                    code += "mv.visitJumpInsn(Opcodes.IF_ICMPGE, elseblock);\n";
+                }
+                else if(comp.equals("=")) {
+                    code += "mv.visitJumpInsn(Opcodes.IF_ICMPNE, elseblock);\n";
+                }
+                else {
+                    code += "mv.visitJumpInsn(Opcodes.IF_ICMPEQ, elseblock);\n";
+                }
+            }
+            //The IF Block
+            int i=5;
+            while(!childName.equals("ELSE")) {
+                code += visitStat((StatContext)ctx.getParent().getChild(i));
+                i++;
+                childName = ctx.getParent().getChild(i).getText();
+            }
+            //The ELSE Block
+            code += "mv.visitLabel(elseblock);\n";
+            for(int j=i+1; j<ctx.getParent().getChildCount()-1; j++) {
+                code += visitStat((StatContext)ctx.getParent().getChild(j));
+            }
+            code += "mv.visitLabel(endIf);\n";
+        }
+        else if(ctx.getParent().getChild(1).getText().equals("0") || ctx.getParent().getChild(3).getText().equals("0") ){
+            if(comp.equals(">")) {
+                code += "mv.visitJumpInsn(Opcodes.IFLE,"+label+");\n";
+            }
+            else if(comp.equals("<")) {
+                code += "mv.visitJumpInsn(Opcodes.IFGE,"+label+");\n";
+            }
+            else if(comp.equals("=")) {
+                code += "mv.visitJumpInsn(Opcodes.IFNE,"+label+");\n";
+            }
+            else {
+                code += "mv.visitJumpInsn(Opcodes.IFEQ,"+label+");\n";
+            }    
+            for(int i=5; i<ctx.getParent().getChildCount()-1; i++) {
+                code += visitStat((StatContext) ctx.getParent().getChild(i));
+            }
+            if(label.equals("endLoop"));
+                code += "mv.visitJumpInsn(Opcodes.GOTO, loop);\n";
+            code += "mv.visitLabel("+label+");\n";
+        }
+        else {
+            if(comp.equals(">")) {
+                code += "mv.visitJumpInsn(Opcodes.IF_ICMPLE, "+label+");\n";
+            }
+            else if(comp.equals("<")) {
+                code += "mv.visitJumpInsn(Opcodes.IF_ICMPGE,"+label+");\n";
+            }
+            else if(comp.equals("=")) {
+                code += "mv.visitJumpInsn(Opcodes.IF_ICMPNE, "+label+");\n";
+            }
+            else {
+                code += "mv.visitJumpInsn(Opcodes.IF_ICMPEQ,"+label+");\n";
+            }
+            for(int i=5; i<ctx.getParent().getChildCount()-1; i++) {
+                code += visitStat((StatContext) ctx.getParent().getChild(i));
+            }
+            if(label.equals("endLoop"));
+                code += "mv.visitJumpInsn(Opcodes.GOTO, loop);\n";
+            code += "mv.visitLabel("+label+");\n";
+        }
+        return code;
+    }//end visitComp
 
     /**
      * {@inheritDoc}
@@ -482,11 +770,4 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
         return ctx.ID().getText();
     }//end visitIdentifier
 
-    /* 
-    @Override 
-    public String visitId(KnightCodeParser.IdContext ctx) { 
-        //System.out.println("visitID: " + ctx.ID().getText());
-        return ctx.ID().getText(); 
-    }//end visitID
-    */
 }//end MyVisitor
