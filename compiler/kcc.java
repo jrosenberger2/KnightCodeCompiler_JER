@@ -15,11 +15,10 @@ import java.io.FileOutputStream;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 //import org.antlr.v4.gui.Trees;
-
 import lexparse.*;
 public class kcc{
     public static void main(String[] args){
-        //Test arg length
+        //Test arg length, kill program if more or less than 2 args
         if(args.length !=2) {
             System.out.println("The program takes 2 args; the .kc file to compile and the name of the output program");
             System.exit(1);
@@ -36,11 +35,12 @@ public class kcc{
             parser = new KnightCodeParser(tokens); //create the parser
             ParseTree tree = parser.file();  //set the start location of the parser
             
-            SymbolTable vars = new SymbolTable();
-            //parse true output file name and generation file name
+            //parse output file name and generation file name
             String genName = "Gen" + args[1].substring(args[1].length()-1);
             String outputName = args[1].substring(args[1].indexOf("/")+1);
+            //Create generation File
             File output = new File("output/" + genName + ".java");
+            //Initialize code Strings
             String boilerplate = "";
             String code = "";
             //Trees.inspect(tree, parser);  //displays the parse tree
@@ -56,8 +56,8 @@ public class kcc{
                 boilerplate += "mv.visitCode();\n";
                 outStream.write(boilerplate.getBytes());
                 boilerplate = "";
-
-                MyVisitor visit = new MyVisitor(vars);//, output);
+                //Walk the parse tree
+                MyVisitor visit = new MyVisitor();//vars);//, output);
                 //asm code for current program
                 code += visit.visit(tree);
                 outStream.write(code.getBytes());
@@ -80,10 +80,8 @@ public class kcc{
             try {
                 compile.waitFor();
                 Runtime.getRuntime().exec("java output." + genName);
-            }catch(InterruptedException e){System.out.println(e.getMessage());}
-            
+            }catch(InterruptedException e){System.out.println(e.getMessage());}  
             System.out.println("Done!");
-            //vars.print();
         }
         catch(IOException e){System.out.println(e.getMessage());}   
     }//end main

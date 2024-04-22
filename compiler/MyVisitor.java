@@ -1,14 +1,13 @@
 /**
  * MyVisitor is the method visitor used by kcc.java to walk the parse tree, it returns a string of java asm code
  * @author Jared Rosenberger
- * @version 2.3
+ * @version 2.4
  * Assignment 5
  * CS322 - Compiler Construction
  * Spring 2024
  */
 package compiler;
 import org.antlr.v4.runtime.tree.ParseTree;
-
 //import org.objectweb.asm.Opcodes;
 import lexparse.KnightCodeBaseVisitor;
 import lexparse.KnightCodeParser;
@@ -20,12 +19,10 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     private int storageIndex;//index for bytecode storage
 
     /**
-     * One arg constructor allows a symbol table to be passed in
-     * @param sym is the symbol table passed into MyVisitor
+     * defualt constructor initializes class variables
      */
-    public MyVisitor(SymbolTable sym) {
-        symbols = sym;
-        //asmCode = "";
+    public MyVisitor() {
+        symbols = new SymbolTable();
         storageIndex = 1;
         index = new SymbolTable();
     }//end Constructor
@@ -33,6 +30,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitFile is used to start walking the parse tree by kcc.java
+     * @param ctx is the starting point of the parse tree
+     * @return the String containing all asm commands needed for the .kc file
      */
     @Override
     public String visitFile(KnightCodeParser.FileContext ctx) { 
@@ -44,6 +43,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitDeclare is used put identifiers and vartypes into the symbol table
+     * @param ctx is the DECLARE node of the parse tree
+     * @return an empty String
      */
     @Override
     public String visitDeclare(KnightCodeParser.DeclareContext ctx) {
@@ -73,6 +74,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitBody is used to visit each statement in the body of the kc code
+     * @param ctx is the BODY node of the parse tree
+     * @return a String containing all asm commands needed for the body of the .kc file
      */
     @Override 
     public String visitBody(KnightCodeParser.BodyContext ctx) { 
@@ -92,6 +95,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitStat is used to visit all statements and return apropriate asm code
+     * @param ctx is a STAT node of the parse tree
+     * @return a String containing all asm commands needed for a given STAT in the .kc file
      */
     @Override 
     public String visitStat(KnightCodeParser.StatContext ctx) { 
@@ -161,6 +166,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitSetvar is used to set the values of any variable in the symbol table and/or its bytecode index in the index table
+     * @param ctx is a SET node of the parse tree 
+     * @return a String containing all asm commands needed for a given SET in the .kc file
      */
     @Override 
     public String visitSetvar(KnightCodeParser.SetvarContext ctx) { 
@@ -261,6 +268,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitPrint is used to return asm code for printing a string or variable
+     * @param ctx is a PRINT node of the parse tree
+     * @return a String containing all asm commands needed for a given PRINT in the .kc file
      */
     @Override 
     public String visitPrint(KnightCodeParser.PrintContext ctx) { 
@@ -301,6 +310,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitRead is used to visit the read command, create or load a Scanner, read the next line, and save modified variables/inputs in the index table
+     * @param ctx is a READ node of the parse tree
+     * @return a String containing all asm commands needed for a given READ in the .kc file
      */
     @Override 
     public String visitRead(KnightCodeParser.ReadContext ctx) { 
@@ -353,7 +364,9 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
 
     /**
      * {@inheritDoc}
-     * visitDecision returns suitable asm code for an if, then, else block  
+     * visitDecision returns suitable asm code for an if, then, else block
+     * @param ctx is a DECISION node of the parse tree
+     * @return a String containing all asm commands needed for a given DECISION in the .kc file
      */
     @Override 
     public String visitDecision(KnightCodeParser.DecisionContext ctx) { 
@@ -398,6 +411,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitLoop returns suitable asm code for a while loop
+     * @param ctx is a LOOP node of the parse tree
+     * @return a String containing all asm commands needed for a given LOOP in the .kc file
      */
     @Override 
     public String visitLoop(KnightCodeParser.LoopContext ctx) { 
@@ -447,6 +462,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitParenthesis handles cases of two expressions divided with parentheses
+     * @param ctx is a Parenthesis node of the parse tree
+     * @return a String containing all asm commands needed for a given parenthesis in the .kc file
      */
     @Override 
     public String visitParenthesis(KnightCodeParser.ParenthesisContext ctx) { 
@@ -563,8 +580,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
 
     /**
      * getNumbers is used to get the terms of an expression and return asm code for the pushes/loads
-     * @param ctx is the expression context to be walked
-     * @return a string of all the asm commands neccesary to load the two numbers
+     * @param ctx is a EXPR node of the parse tree
+     * @return a String containing all asm commands needed to load the 2 numbers in an expr
      */
     private String getNumbers(ParseTree ctx) {
         String code = "";
@@ -635,6 +652,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitMultiplication visits an mult expr, returns bytecode for the operation, and saves the product in the index table
+     * @param ctx is a MULT node of the parse tree
+     * @return a String containing all asm commands needed for a given MULT in the .kc file
      */
     @Override 
     public String visitMultiplication(KnightCodeParser.MultiplicationContext ctx) { 
@@ -658,6 +677,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitDivision visits a division expr, returns bytecode for the division, and saves the quotient in the index table
+     * @param ctx is a DIV node of the parse tree
+     * @return a String containing all asm commands needed for a given DIV in the .kc file
      */
     @Override 
     public String visitDivision(KnightCodeParser.DivisionContext ctx) { 
@@ -679,14 +700,15 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitAddition visits an addition expr, returns bytecode for the addtion, and saves the sum in the index table
+     * @param ctx is a ADD node of the parse tree
+     * @return a String containing all asm commands needed for a given ADD in the .kc file
      */
     @Override 
     public String visitAddition(KnightCodeParser.AdditionContext ctx) {
         System.out.println("Visiting ADD");
         String code = "";
-        int a=-1;
-        int b=-1;
-        int aIndex=-1;
+        int aIndex =-1;
+        int bIndex =-1;
         String termA = ctx.getChild(0).getText();
         String termB = ctx.getChild(2).getText();
         //Checks for an iinc situation
@@ -700,11 +722,11 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
         }
         //Parses int a from the tree
         else if(index.getValue(termB) != null) {
-            try {
-                a = Integer.parseInt(termA);
-                code += "mv.visitIincInsn("+index.getValue(termB).getInt()+", 1);\n";
+            bIndex =index.getValue(termB).getInt();
+            if(termA.equals("1")) {
+                code += "mv.visitIincInsn("+bIndex+", 1);\n";
                 return code;
-            } catch(NumberFormatException e) {}
+            }
         }
         else {
             code += getNumbers(ctx);
@@ -724,6 +746,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitSubtraction visits a subtraction expr, returns bytecode for the subtraction, and saves the sum in the index table
+     * @param ctx is a SUB node of the parse tree
+     * @return a String containing all asm commands needed for a given SUB in the .kc file
      */
     @Override 
     public String visitSubtraction(KnightCodeParser.SubtractionContext ctx) { 
@@ -759,6 +783,8 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitComp returns appropriate comparison asm code for comparisons in if or loop statements
+     * @param ctx is a COMP node of the parse tree
+     * @return a String containing all asm commands needed for a given COMP in the .kc file
      */
     @Override 
     public String visitComp(KnightCodeParser.CompContext ctx) { 
@@ -874,10 +900,13 @@ public class MyVisitor extends KnightCodeBaseVisitor<String>{
     /**
      * {@inheritDoc}
      * visitIdentifer returns the txt of a given ID ndoe
+     * @param ctx is an ID node of the parse tree
+     * @return a String containing the ID
      */
     @Override 
     public String visitIdentifier(KnightCodeParser.IdentifierContext ctx) { 
         //System.out.println("visitIdentifier: " + ctx.ID().getText());
         return ctx.ID().getText();
     }//end visitIdentifier
+    
 }//end MyVisitor
