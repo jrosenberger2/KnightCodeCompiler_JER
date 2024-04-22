@@ -1,7 +1,7 @@
 /**
- * kcc.java accepts a .kc file and compiles it to java asm code which generates bytecode for the output program
+ * kcc.java accepts a .kc file and the name of the output file. kcc.java compiles the .kc file into a java .class file 
  * @author Jared Rosenberger
- * @version 1
+ * @version 2.0
  * Assignment 5
  * CS322 - Compiler Construction
  * Spring 2024
@@ -75,13 +75,16 @@ public class kcc{
                 outStream.close();
             } catch(FileNotFoundException e) {System.out.println(e.getMessage());}
             System.out.println("Generating File...");
-            Runtime.getRuntime().exec("javac output/" + genName + ".java");
-            Runtime.getRuntime().exec("java output/" + genName);
+            //Runtime methods calls javac and java on the outputfile
+            Process compile = Runtime.getRuntime().exec("javac output/" + genName + ".java");
+            try {
+                compile.waitFor();
+                Runtime.getRuntime().exec("java output." + genName);
+            }catch(InterruptedException e){System.out.println(e.getMessage());}
+            
             System.out.println("Done!");
             //vars.print();
-            //System.out.println(tree.toStringTree(parser));
         }
-        catch(IOException e){System.out.println(e.getMessage());}
-        
+        catch(IOException e){System.out.println(e.getMessage());}   
     }//end main
 }//end kcc
